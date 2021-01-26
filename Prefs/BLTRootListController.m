@@ -7,7 +7,10 @@ inline NSString* GetPrefVal(NSString* key){
 @implementation BLTRootListController
 
 - (id)loadSettingGroups {
-    
+
+    // setup the fancy animation 
+    [self setupCustomIcon];
+
     id facade = [[NSClassFromString(@"TVSettingsPreferenceFacade") alloc] initWithDomain:@"love.litten.balletpreferences" notifyChanges:TRUE];
     
     videoDirectory = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:@"/var/mobile/Documents/Ethereal/" error:NULL];
