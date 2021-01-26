@@ -1,7 +1,7 @@
 Package: love.litten.ballet
 Name: Ballet
-Depends: mobilesubstrate, preferenceloader, firmware (>= 13.0)
-Version: 1.0
+Depends: mobilesubstrate, preferenceloader, firmware (>= 13.0), com.nito.breezy (>= 2.5.2-1), com.imore.tvosavplayer (>= 1.0-2), com.nito.ethereal, com.nito.airphoto
+Version: 1.0.1
 Architecture: appletvos-arm64
 Description: Wallpapers for your Apple TV
 Maintainer: Litten

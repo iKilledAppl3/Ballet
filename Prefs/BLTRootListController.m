@@ -1,15 +1,5 @@
-#include "BLTRootListController.h"
+#import "BLTRootListController.h"
 
-UIBlurEffect* blur;
-UIVisualEffectView* blurView;
-
-TSKSettingItem* enableSwitch;
-TSKSettingItem* useImageWallpaperSwitch;
-TSKSettingItem* useVideoWallpaperSwitch;
-TSKSettingItem* respringButton;
-TSKSettingItem* resetButton;
-
-#define PLIST_PATH @"/var/mobile/Library/Preferences/love.litten.balletpreferences.plist"
 inline NSString* GetPrefVal(NSString* key){
     return [[NSDictionary dictionaryWithContentsOfFile:PLIST_PATH] valueForKey:key];
 }
@@ -20,31 +10,51 @@ inline NSString* GetPrefVal(NSString* key){
     
     id facade = [[NSClassFromString(@"TVSettingsPreferenceFacade") alloc] initWithDomain:@"love.litten.balletpreferences" notifyChanges:TRUE];
     
+    videoDirectory = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:@"/var/mobile/Documents/Ethereal/" error:NULL];
+    wallpaperDirectory = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:@"/var/mobile/Documents/AirPhoto/" error:NULL];
+
     NSMutableArray* _backingArray = [NSMutableArray new];
     
     // enable
     enableSwitch = [TSKSettingItem toggleItemWithTitle:@"Enabled" description:@"" representedObject:facade keyPath:@"Enabled" onTitle:@"Enabled" offTitle:@"Disabled"];
-    
-    TSKSettingGroup* enableGroup = [TSKSettingGroup groupWithTitle:@"Enable" settingItems:@[enableSwitch]];
-    [_backingArray addObject:enableGroup];
 
     // settings
     useImageWallpaperSwitch = [TSKSettingItem toggleItemWithTitle:@"Use Image Wallpaper" description:@"" representedObject:facade keyPath:@"useImageWallpaper" onTitle:@"Enabled" offTitle:@"Disabled"];
+    // loads from the directory and applies them to the tweak
+    staticWallpaper = [TSKSettingItem multiValueItemWithTitle:@"Choose Image" description:@"Choose your static wallpaper. \n You can AirDrop them to AirPhoto and select them here." representedObject:facade keyPath:@"chosenWallpaper" availableValues:wallpaperDirectory];
+
     useVideoWallpaperSwitch = [TSKSettingItem toggleItemWithTitle:@"Use Video Wallpaper" description:@"" representedObject:facade keyPath:@"useVideoWallpaper" onTitle:@"Enabled" offTitle:@"Disabled"];
-    
-    TSKSettingGroup* settingsGroup = [TSKSettingGroup groupWithTitle:@"Wallpaper" settingItems:@[useImageWallpaperSwitch, useVideoWallpaperSwitch]];
-    [_backingArray addObject:settingsGroup];
+     // loads from the directory and applies them to the tweak
+    videoWallpaper = [TSKSettingItem multiValueItemWithTitle:@"Choose Video" description:@"Choose your video wallpaper. \n You can AirDrop them to Ethereal and select them here." representedObject:facade keyPath:@"chosenVideoWallpaper" availableValues:videoDirectory];
 
     // other options
-    respringButton = [TSKSettingItem actionItemWithTitle:@"Respring" description:@"" representedObject:facade keyPath:PLIST_PATH target:self action:@selector(respring)];
+    respringButton = [TSKSettingItem actionItemWithTitle:@"Respring" description:@"" representedObject:facade keyPath:PLIST_PATH target:self action:@selector(doAFancyRespring)];
     resetButton = [TSKSettingItem actionItemWithTitle:@"Reset Preferences" description:@"" representedObject:facade keyPath:PLIST_PATH target:self action:@selector(resetPrompt)];
     
+    // settings groups always stay together
+    TSKSettingGroup* enableGroup = [TSKSettingGroup groupWithTitle:@"Enable" settingItems:@[enableSwitch]];
+    TSKSettingGroup* settingsGroup = [TSKSettingGroup groupWithTitle:@"Staic Wallpaper" settingItems:@[useImageWallpaperSwitch, staticWallpaper]];
+    TSKSettingGroup *settingsGroup2 = [TSKSettingGroup groupWithTitle:@"Video Wallpaper" settingItems:@[useVideoWallpaperSwitch, videoWallpaper]];
     TSKSettingGroup* otherOptionsGroup = [TSKSettingGroup groupWithTitle:@"Other Options" settingItems:@[respringButton, resetButton]];
-    [_backingArray addObject:otherOptionsGroup];
+
+    // add the settings groups to the backing array
+     [_backingArray addObject:enableGroup];
+     [_backingArray addObject:settingsGroup];
+     [_backingArray addObject:settingsGroup2];
+     [_backingArray addObject:otherOptionsGroup];
 
     [self setValue:_backingArray forKey:@"_settingGroups"];
+    
+    return _backingArray;
 
-    // gradient and custom icon
+    [self setupCustomIcon];
+    
+}
+
+
+// move this to its own method to make it more clean!
+- (void)setupCustomIcon {
+        // gradient and custom icon
     NSString* imagePath = [[NSBundle bundleForClass:self.class] pathForResource:@"preferencesIcon" ofType:@"png"];
     UIImage* icon = [UIImage imageWithContentsOfFile:imagePath];
     if (icon != nil) {
@@ -87,10 +97,8 @@ inline NSString* GetPrefVal(NSString* key){
         [[[self view] layer] insertSublayer:gradient atIndex:0];
     }
 
-    
-    return _backingArray;
-    
 }
+
 
 - (void)resetPrompt {
 
@@ -115,29 +123,29 @@ inline NSString* GetPrefVal(NSString* key){
 
     [[NSFileManager defaultManager] removeItemAtPath:@"/var/mobile/Library/Preferences/love.litten.balletpreferences.plist" error:nil];
     
-    [self respring];
+    [self doAFancyRespring];
+
+}
+
+- (void)doAFancyRespring {
+
+    self.blur = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
+    self.blurView = [[UIVisualEffectView alloc] initWithEffect:self.blur];
+    [self.blurView setFrame:self.view.bounds];
+    [self.blurView setAlpha:0.0];
+    [[self view] addSubview:self.blurView];
+
+    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseOut animations:^{
+        [self.blurView setAlpha:1.0];
+    } completion:^(BOOL finished) {
+        [self respring];
+    }];
 
 }
 
 - (void)respring {
 
-    blur = [UIBlurEffect effectWithStyle:UIBlurEffectStyleRegular];
-    blurView = [[UIVisualEffectView alloc] initWithEffect:blur];
-    [blurView setFrame:self.view.bounds];
-    [blurView setAlpha:0.0];
-    [[self view] addSubview:blurView];
-
-    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseOut animations:^{
-        [blurView setAlpha:1.0];
-    } completion:^(BOOL finished) {
-        [self respringUtil];
-    }];
-
-}
-
-- (void)respringUtil {
-
-    NSTask* task = [[[NSTask alloc] init] autorelease];
+    NSTask  *task = [[[NSTask alloc] init] autorelease];
     [task setLaunchPath:@"/usr/bin/killall"];
     [task setArguments:[NSArray arrayWithObjects:@"backboardd", nil]];
     [task launch];
@@ -163,23 +171,6 @@ inline NSString* GetPrefVal(NSString* key){
     [testObject setEditingItem:item];
     [self.navigationController pushViewController:testObject animated:TRUE];
 
-}
-
-- (void)editingController:(id)arg1 didCancelForSettingItem:(TSKSettingItem *)arg2 {
-
-    [super editingController:arg1 didCancelForSettingItem:arg2];
-
-}
-
-- (void)editingController:(id)arg1 didProvideValue:(id)arg2 forSettingItem:(TSKSettingItem *)arg3 {
-
-    [super editingController:arg1 didProvideValue:arg2 forSettingItem:arg3];
-    
-    TVSPreferences* prefs = [TVSPreferences preferencesWithDomain:@"love.litten.balletpreferences"];
-    
-    [prefs setObject:arg2 forKey:arg3.keyPath];
-    [prefs synchronize];
-    
 }
 
 - (id)previewForItemAtIndexPath:(NSIndexPath *)indexPath {

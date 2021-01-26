@@ -1,7 +1,7 @@
 #import "Ballet.h"
 
+// regular wallpaper
 %group BalletImage
-
 %hook HBAppGridViewController
 
 - (void)viewDidLoad { // add image wallpaper
@@ -13,17 +13,18 @@
 	wallpaperView = [[UIImageView alloc] initWithFrame:[[self view] bounds]];
 	[wallpaperView setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
 	[wallpaperView setContentMode:UIViewContentModeScaleAspectFill];
-	[wallpaperView setImage:[UIImage imageWithContentsOfFile:@"/Library/Ballet/wallpaper.png"]];
+	// user selected image from AirDrop location
+	[wallpaperView setImage:[UIImage imageWithContentsOfFile:wallpaperPath]];
 	[[self view] insertSubview:wallpaperView atIndex:0];
 
 }
 
 %end
-
 %end
 
-%group BalletVideo
 
+// video wallpaper 
+%group BalletVideo
 %hook HBAppGridViewController
 
 - (void)viewDidLoad { // add video wallpaper
@@ -32,7 +33,8 @@
 
 	if (playerLayer) return;
 
-	NSURL* url = [NSURL fileURLWithPath:[NSString stringWithFormat:@"/Library/Ballet/wallpaper.mp4"]];
+	// when user selects video from AirDropped location
+	NSURL* url = [NSURL fileURLWithPath:videoPath];
 
     playerItem = [AVPlayerItem playerItemWithURL:url];
 
@@ -65,7 +67,6 @@
 %end
 
 %group Ballet
-
 %hook HBUIMainAppGridTopShelfContainerView
 
 - (void)didMoveToWindow { // hide top shelf view
@@ -77,17 +78,19 @@
 }
 
 %end
-
 %end
 
 static void loadPrefs() {
 
-	NSMutableDictionary* preferences = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/love.litten.balletpreferences.plist"];
+	NSMutableDictionary	*prefs = [[NSMutableDictionary alloc] initWithContentsOfFile:PLIST_PATH];
   
-	enabled = [([preferences objectForKey:@"Enabled"] ?: @(NO)) boolValue];
+	enabled = [([prefs objectForKey:@"Enabled"] ?: @(NO)) boolValue];
 
-	useImageWallpaperSwitch = [([preferences objectForKey:@"useImageWallpaper"] ?: @(NO)) boolValue];
-	useVideoWallpaperSwitch = [([preferences objectForKey:@"useVideoWallpaper"] ?: @(NO)) boolValue];
+	useImageWallpaperSwitch = [([prefs objectForKey:@"useImageWallpaper"] ?: @(NO)) boolValue];
+	useVideoWallpaperSwitch = [([prefs objectForKey:@"useVideoWallpaper"] ?: @(NO)) boolValue];
+	
+	chosenWallpaper = [prefs objectForKey:@"chosenWallpaper"];
+	chosenVideoWallpaper = [prefs objectForKey:@"chosenVideoWallpaper"];
 
 }
 
@@ -98,10 +101,10 @@ static void loadPrefs() {
 	
 	if (enabled) {
 		%init(Ballet);
-		if (useImageWallpaperSwitch && [[NSFileManager defaultManager] fileExistsAtPath:@"/Library/Ballet/wallpaper.png"]) {
+		if (useImageWallpaperSwitch) {
 			%init(BalletImage);
 			return;
-		} else if (useVideoWallpaperSwitch && [[NSFileManager defaultManager] fileExistsAtPath:@"/Library/Ballet/wallpaper.mp4"]) {
+		} else if (useVideoWallpaperSwitch) {
 			%init(BalletVideo);
 			return;
 		}

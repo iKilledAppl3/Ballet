@@ -1,56 +1,33 @@
-#import <UIKit/UIKit.h>
-#import <Foundation/Foundation.h>
-#import "TVSettingsKit/TSKViewController.h"
-#import "TVSettingsKit/TSKSettingGroup.h"
-#import "TVSettingsKit/TSKVibrantImageView.h"
-#import "TVSettingsKit/TSKPreviewViewController.h"
+// always have a common header to keep your main header clean!
+#import "Common.h"
 
-@interface TVSettingsPreferenceFacade : NSObject
-{
-    NSString* _domain;
-    NSString* _containerPath;
-}
-@property(readonly, copy, nonatomic)NSString* containerPath;
-@property(readonly, copy, nonatomic)NSString* domain;
-- (id)valueForUndefinedKey:(id)arg1;
-- (void)setValue:(id)arg1 forUndefinedKey:(id)arg2;
-- (id)_initWithDomain:(id)arg1 containerPath:(id)arg2 notifyChanges:(_Bool)arg3;
-- (id)initWithDomain:(id)arg1 notifyChanges:(_Bool)arg2;
-- (id)initWithDomain:(id)arg1 containerPath:(id)arg2;
-@end
+// setting items
+TSKSettingItem	*enableSwitch;
+TSKSettingItem	*useImageWallpaperSwitch;
+TSKSettingItem  *staticWallpaper;
+TSKSettingItem	*useVideoWallpaperSwitch;
+TSKSettingItem 	*videoWallpaper;
+TSKSettingItem	*respringButton;
+TSKSettingItem	*resetButton;
 
-@interface TVSPreferences : NSObject
-+ (id)preferencesWithDomain:(id)arg1;
-- (_Bool)setBool:(_Bool)arg1 forKey:(id)arg2;
-- (_Bool)boolForKey:(id)arg1 defaultValue:(_Bool)arg2;
-- (_Bool)boolForKey:(id)arg1;
-- (_Bool)setDouble:(double)arg1 forKey:(id)arg2;
-- (double)doubleForKey:(id)arg1 defaultValue:(double)arg2;
-- (double)doubleForKey:(id)arg1;
-- (_Bool)setFloat:(float)arg1 forKey:(id)arg2;
-- (float)floatForKey:(id)arg1 defaultValue:(float)arg2;
-- (float)floatForKey:(id)arg1;
-- (_Bool)setInteger:(int)arg1 forKey:(id)arg2;
-- (int)integerForKey:(id)arg1 defaultValue:(int)arg2;
-- (int)integerForKey:(id)arg1;
-- (id)stringForKey:(id)arg1;
-- (_Bool)setObject:(id)arg1 forKey:(id)arg2;
-- (id)objectForKey:(id)arg1;
-- (_Bool)synchronize;
-- (id)initWithDomain:(id)arg1;
-@end
+// plist path
+#define PLIST_PATH @"/var/mobile/Library/Preferences/love.litten.balletpreferences.plist"
 
-@interface TSKTextInputViewController : UIViewController
-@property(assign,nonatomic)BOOL supportsPasswordSharing;
-@property(nonatomic,retain)NSString* networkName;
-@property(assign,nonatomic)BOOL secureTextEntry;
-@property(nonatomic,copy)NSString* headerText;
-@property(nonatomic,copy)NSString* messageText;
-@property(nonatomic,copy)NSString* initialText;
-@property(assign,nonatomic)long long capitalizationType;
-@property(assign,nonatomic)long long keyboardType;
-@property(nonatomic,retain)TSKSettingItem* editingItem;
-@property(assign,nonatomic,weak)id<TSKSettingItemEditingControllerDelegate> editingDelegate;
+// loads the static wallpapers from a path and sets the screensaver to the plist file!
+NSArray *wallpaperDirectory;
+
+// loads the video wallpapers from a path and sets the screensaver to the plist file!
+NSArray *videoDirectory;
+
+// interface for prefs
+@interface BLTRootListController : TSKViewController
+@property (nonatomic,strong) UIBlurEffect* blur;
+@property (nonatomic,strong) UIVisualEffectView* blurView;
+- (void)resetPrompt;
+- (void)resetPreferences;
+- (void)doAFancyRespring;
+- (void)respring;
+- (void)setupCustomIcon;
 @end
 
 @interface NSTask : NSObject
@@ -74,9 +51,4 @@
 - (void)terminate;
 @end
 
-@interface BLTRootListController : TSKViewController
-- (void)resetPrompt;
-- (void)resetPreferences;
-- (void)respring;
-- (void)respringUtil;
-@end
+
